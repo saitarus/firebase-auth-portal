@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Firebaseを活用した会員機能、プロフィール、ログイン履歴のデモページです。">
+  <title>会員機能デモサイト - Saitaru Member Demo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Main Container -->
+  <div class="container" id="mainContainer">
+    
+    <!-- 1. Authentication View (Login / SignUp) -->
+    <div id="authCard" class="card">
+      <h1 id="authTitle">アカウント作成</h1>
+      <p id="authSubtitle" class="subtitle">メールアドレスとパスワードを入力してください</p>
+
+      <form id="authForm">
+        <!-- SignUp-specific input (Display Name) -->
+        <div class="form-group" id="displayNameGroup">
+          <label for="displayNameInput">お名前 / 表示名</label>
+          <div class="input-wrapper">
+            <input type="text" id="displayNameInput" class="form-control" placeholder="例：山田 太郎" autocomplete="name">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="emailInput">メールアドレス</label>
+          <div class="input-wrapper">
+            <input type="email" id="emailInput" class="form-control" placeholder="your@email.com" autocomplete="email" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="passwordInput">パスワード</label>
+          <div class="input-wrapper">
+            <input type="password" id="passwordInput" class="form-control" placeholder="••••••••" autocomplete="new-password" required minlength="6">
+          </div>
+        </div>
+
+        <button type="submit" id="authSubmitBtn" class="btn">アカウント登録</button>
+      </form>
+
+      <div class="divider"><span>または</span></div>
+
+      <button id="googleAuthBtn" class="btn btn-google">
+        <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+        </svg>
+        Googleでログイン
+      </button>
+
+      <div class="toggle-text">
+        <span id="toggleMessage">すでにアカウントをお持ちですか？</span>
+        <a href="#" id="toggleAuthMode">ログインはこちら</a>
+      </div>
+    </div>
+
+    <!-- 2. Dashboard View (Profile & Login History) -->
+    <div id="dashboardContainer" class="dashboard-container hidden">
+      <!-- Dashboard Header -->
+      <div class="card dashboard-header">
+        <div class="user-badge">
+          <div class="user-avatar" id="avatarIcon">U</div>
+          <div class="user-info-text">
+            <h1 id="userGreeting" style="font-size: 1.4rem; text-align: left; background: none; -webkit-text-fill-color: initial; margin-bottom: 0;">ようこそ</h1>
+            <span class="user-email" id="userEmail">user@example.com</span>
+          </div>
+        </div>
+        <button id="logoutBtn" class="btn btn-secondary" style="width: auto; padding: 10px 20px;">ログアウト</button>
+      </div>
+
+      <!-- Dashboard Grid Layout -->
+      <div class="dashboard">
+        <!-- Profile Panel -->
+        <div class="card profile-card">
+          <h2>プロフィール編集</h2>
+          <p class="subtitle" style="text-align: left; margin-bottom: 20px;">表示名の変更やアカウント情報の確認ができます。</p>
+          
+          <form id="profileForm">
+            <div class="form-group">
+              <label for="profileNameInput">表示名</label>
+              <input type="text" id="profileNameInput" class="form-control" placeholder="表示名を設定してください" required>
+            </div>
+            <button type="submit" class="btn">プロフィールを保存</button>
+          </form>
+
+          <div style="margin-top: 30px; border-top: 1px solid var(--card-border); padding-top: 24px;"></div>
+
+          <h2>フリーランス実績編集</h2>
+          <form id="portfolioForm">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+              <div>
+                <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; border-bottom: 2px solid #008fde; padding-bottom: 4px; display: inline-block;">Lancers</h3>
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label for="lancersRatingInput">評価 (0.0 - 5.0)</label>
+                  <input type="number" id="lancersRatingInput" class="form-control" step="0.1" min="0" max="5" value="4.9" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label for="lancersCountInput">受注件数</label>
+                  <input type="number" id="lancersCountInput" class="form-control" min="0" value="24" required>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                  <input type="checkbox" id="lancersCertifiedInput" style="width: 16px; height: 16px; cursor: pointer;">
+                  <label for="lancersCertifiedInput" style="margin-bottom: 0; cursor: pointer; text-transform: none;">認定ランサー</label>
+                </div>
+              </div>
+              
+              <div>
+                <h3 style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; border-bottom: 2px solid #10b981; padding-bottom: 4px; display: inline-block;">CrowdWorks</h3>
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label for="cwRatingInput">評価 (0.0 - 5.0)</label>
+                  <input type="number" id="cwRatingInput" class="form-control" step="0.1" min="0" max="5" value="4.8" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                  <label for="cwCountInput">受注件数</label>
+                  <input type="number" id="cwCountInput" class="form-control" min="0" value="32" required>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+                  <input type="checkbox" id="cwProInput" style="width: 16px; height: 16px; cursor: pointer;">
+                  <label for="cwProInput" style="margin-bottom: 0; cursor: pointer; text-transform: none;">プロワーカー</label>
+                </div>
+              </div>
+            </div>
+            <button type="submit" class="btn">実績データを保存</button>
+          </form>
+
+          <div style="margin-top: 30px; border-top: 1px solid var(--card-border); padding-top: 24px;"></div>
+
+          <h2>アカウント詳細</h2>
+          <div class="user-meta-info">
+            <div class="meta-row">
+              <span class="meta-label">ユーザーID</span>
+              <span class="meta-value" id="metaUid">-</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">アカウント作成日</span>
+              <span class="meta-value" id="metaCreatedAt">-</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">最終ログイン日時</span>
+              <span class="meta-value" id="metaLastLogin">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Freelance Portfolio Summary Panel -->
+        <div class="card portfolio-card">
+          <h2>実績ポートフォリオ</h2>
+          <p class="subtitle" style="text-align: left; margin-bottom: 20px;">Lancers および CrowdWorks での受注実績サマリーです。</p>
+          
+          <div class="portfolio-grid">
+            <!-- Lancers Card -->
+            <div class="portfolio-item-card lancers-brand">
+              <div class="platform-header">
+                <span class="platform-name">Lancers</span>
+                <span id="lancersBadge" class="platform-badge hidden">認定ランサー</span>
+              </div>
+              <div class="platform-body">
+                <div class="stat-group">
+                  <span class="stat-label">満足度 / 評価</span>
+                  <div class="rating-display">
+                    <span class="stars" id="lancersStars">★★★★★</span>
+                    <span class="rating-num" id="lancersRatingVal">0.0</span>
+                  </div>
+                </div>
+                <div class="stat-group">
+                  <span class="stat-label">受注実績</span>
+                  <span class="stat-count"><strong id="lancersCountVal">0</strong> 件</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- CrowdWorks Card -->
+            <div class="portfolio-item-card cw-brand">
+              <div class="platform-header">
+                <span class="platform-name">CrowdWorks</span>
+                <span id="cwBadge" class="platform-badge hidden">プロワーカー</span>
+              </div>
+              <div class="platform-body">
+                <div class="stat-group">
+                  <span class="stat-label">満足度 / 評価</span>
+                  <div class="rating-display">
+                    <span class="stars" id="cwStars">★★★★★</span>
+                    <span class="rating-num" id="cwRatingVal">0.0</span>
+                  </div>
+                </div>
+                <div class="stat-group">
+                  <span class="stat-label">受注実績</span>
+                  <span class="stat-count"><strong id="cwCountVal">0</strong> 件</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Login History Panel -->
+        <div class="card history-card">
+          <h2>ログイン履歴</h2>
+          <p class="subtitle" style="text-align: left; margin-bottom: 20px;">直近10件のログイン実績が表示されます。</p>
+          
+          <div id="historyList" class="history-list">
+            <div class="no-history">履歴を取得しています...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>&copy; 2026 Saitaru Member Demo | <a href="#" id="openTermsLink">利用規約</a></p>
+    </footer>
+
+  </div>
+
+  <!-- Terms of Service Modal -->
+  <div id="termsModal" class="modal-overlay hidden">
+    <div class="card modal-card">
+      <div class="modal-header">
+        <h2>利用規約</h2>
+        <button id="closeTermsBtn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>本規約は、Firebaseプロジェクト「saitaru-member-demo」を利用した会員機能デモサイト（以下、本デモサイト）の利用条件を定めるものです。</p>
+        
+        <h3>1. 個人情報の取り扱いについて</h3>
+        <p>本デモサイトでは、会員登録およびログイン認証の目的においてのみ、Firebase Authenticationを用いてメールアドレスを管理します。その他の不必要な個人情報の収集、および第三者への情報開示・提供は一切行いません。</p>
+        
+        <h3>2. データの取り扱いについて</h3>
+        <p>本サイトは会員機能の「動作デモ」を目的としたシステムです。登録されたプロフィール情報やログイン履歴などの各種データは、開発・動作テストの都合上、予告なく削除または初期化される場合があります。あらかじめご了承ください。</p>
+        
+        <h3>3. 免責事項</h3>
+        <p>本デモサイトの利用（動作テスト、デモ利用を含む）に関連して利用者に生じたあらゆる損害、損失について、運営者および開発者は一切の責任を負いません。テスト目的以外での重要なデータの入力はお控えください。</p>
+        
+        <h3>4. 規約の変更</h3>
+        <p>本規約は、本デモサイトの機能追加や変更に伴い、予告なく内容を改定する場合があります。</p>
+      </div>
+      <div class="modal-footer">
+        <button id="closeTermsBtnSecondary" class="btn" style="width: auto; padding: 10px 24px;">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Javascript Modules -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>

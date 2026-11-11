@@ -1,0 +1,13 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "test_scripts/**",
+      "仕様書.md",
+      "変更履歴.md"
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+# Firebase Cache & Secrets
+.firebase/
+.firebaserc
+*-service-account.json
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
